@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="cn-ZH">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下一秒功能</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 300px;
+            margin: 0px auto;
+            text-align: center;
+        }
+
+        #time {
+            margin: 20px 0;
+            font-size: 24px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            margin: 5px;
+            width: 50px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div id="time"></div>
+        <div>
+            <input type="text" id="year" placeholder="年" />
+            <input type="text" id="month" placeholder="月" />
+            <input type="text" id="day" placeholder="日" />
+            <input type="text" id="hour" placeholder="时" />
+            <input type="text" id="minute" placeholder="分" />
+            <input type="text" id="second" placeholder="秒" />
+        </div>
+        <button onclick="updateTime()">下一秒</button>
+    </div>
+    <canvas id="graph" width="1366px" height="550px">你的浏览器不支持time</canvas>
+    <script>
+        var canvas = document.getElementById('graph');
+        var context = canvas.getContext('2d');
+        var r = canvas.width / 5;  //半径
+        //将坐标中心作为起启点
+        context.translate(canvas.width / 2, canvas.height / 2);
+        function drawCircle() {
+            context.beginPath();
+            context.lineWidth = 5;
+            context.strokeStyle = "#000";
+            context.arc(0, 0, r, 0, Math.PI * 2, true);
+            context.stroke();
+            context.closePath();
+        }
+        function drawClockScale() {
+            var rad = 0, angle, font, fontX, fontY;
+            context.fillStyle = '#000';
+            // 绘制表盘时刻度
+            for (var i = 0; i < 12; i++) {
+                context.save();
+                rad = i * Math.PI / 6;  // 弧度制，大刻度，总共分为12刻度，每刻度为：2π/12 → π/6
+                context.rotate(rad);  // 旋转画布绘制刻度
+                context.fillRect(r - 10, 0, 10, 5);
+                context.restore();
+            }
+            // 绘制表盘分刻度
+            for (i = 0; i < 60; i++) {
+                context.save();      // 记录旋转画布之前初始状态
+                rad = i * Math.PI / 30;
+                context.rotate(rad);  // 旋转画布绘制刻度
+                context.fillRect(r - 10, 0, 5, 2);   //绘制
+                context.restore();  // 恢复初始状态，未旋转前
+            }
+            // 绘制表盘文字
+            for (i = 0; i < 12; i++) {
+                angle = i * 30;
+                // 转换为弧度制,Math.sin、Math.cos都接受弧度制单位
+                angle = angle * Math.PI / 180;;
+                font = (i + 3 > 12) ? i + 3 - 12 : i + 3;
+                fontX = Math.round(Math.cos(angle) * (r - 30));
+                fontY = Math.round(Math.sin(angle) * (r - 30));
+                context.font = 'bold 14px 微软雅黑';
+                context.fillText(font + '', fontX, fontY);
+            }
+        }
+        function drawHand(rotate, width, height) {
+            context.save();
+            rotate = rotate * Math.PI / 180;      // 转换为弧度制
+            context.rotate(rotate);
+            context.fillRect(-10, 0, width, height);
+            context.restore();
+        }
+        function setTime() {
+            var hour = parseInt(document.getElementById('hour').value, 10);
+            var minute = parseInt(document.getElementById('minute').value, 10);
+            var second = parseInt(document.getElementById('second').value, 10);
+            //console.log(hour + ':' + minute + ':' + second);
+            var hourRotate, minRotate, secRotate;
+            // 计算秒针角度并绘制图形
+            secRotate = second * 6 - 90;
+            drawHand(secRotate, r - 30, 2);
+            // 计算分针角度并绘制图形
+            minRotate = (minute * 60 + second) * 0.1 - 90;
+            drawHand(minRotate, r - 50, 4);
+            // 计算时针角度并绘制图形
+            hourRotate = (hour * 60 * 60 + minute * 60 + second) / 120 - 90;
+            drawHand(hourRotate, r - 70, 5);
+        }
+        setInterval(function () {
+            context.clearRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+            drawCircle();
+            drawClockScale();
+            setTime();
+        }, 1000);
+
+        function updateTime() {
+            // ... 更新时间的逻辑 ...
+        }
+
+        // 获取当前时间，并格式化为所需的格式
+        function getCurrentTime() {
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = now.getMonth() + 1; // getMonth() 返回的月份是从0开始的
+            var day = now.getDate();
+            var hour = now.getHours();
+            var minute = now.getMinutes();
+            var second = now.getSeconds();
+
+            // 确保数值以两位数显示
+            return {
+                year: year,
+                month: month < 10 ? '0' + month : month,
+                day: day < 10 ? '0' + day : day,
+                hour: hour < 10 ? '0' + hour : hour,
+                minute: minute < 10 ? '0' + minute : minute,
+                second: second < 10 ? '0' + second : second
+            };
+        }
+
+        // 使用当前时间初始化输入框和显示
+        function initializeTime() {
+            var currentTime = getCurrentTime();
+            document.getElementById('time').textContent =
+                `${currentTime.year}-${currentTime.month}-${currentTime.day} ` +
+                `${currentTime.hour}:${currentTime.minute}:${currentTime.second}`;
+
+            document.getElementById('year').value = currentTime.year;
+            document.getElementById('month').value = currentTime.month;
+            document.getElementById('day').value = currentTime.day;
+            document.getElementById('hour').value = currentTime.hour;
+            document.getElementById('minute').value = currentTime.minute;
+            document.getElementById('second').value = currentTime.second;
+        }
+
+        // 当文档加载完成时，初始化时间
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeTime();
+        });
+        function isLeapYear(year) {
+            // 闰年判断逻辑
+            return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+        }
+
+        function getDaysInMonth(month, year) {
+            // 获取月份的天数
+            const daysInMonth = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            return daysInMonth[month - 1];
+        }
+
+        function updateTime() {
+            let year = parseInt(document.getElementById('year').value, 10);
+            let month = parseInt(document.getElementById('month').value, 10);
+            let day = parseInt(document.getElementById('day').value, 10);
+            let hour = parseInt(document.getElementById('hour').value, 10);
+            let minute = parseInt(document.getElementById('minute').value, 10);
+            let second = parseInt(document.getElementById('second').value, 10);
+
+            // 验证输入的时间是否合法
+            if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute) || isNaN(second) ||
+                year < 1 || month < 1 || month > 12 || day < 1 || day > getDaysInMonth(month, year) ||
+                hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
+                alert('输入的时间不合法，请重新输入。');
+                return;
+            }
+
+            // 更新时间
+            second++;
+            if (second === 60) { // 如果秒数超过59，重置为0，分钟数加1
+                second = 0;
+                minute++;
+            }
+
+            if (minute === 60) { // 如果分钟数超过59，重置为0，小时数加1
+                minute = 0;
+                hour++;
+            }
+
+            if (hour === 24) { // 如果小时数超过23，重置为0，天数加1
+                hour = 0;
+                day++;
+            }
+
+            // 如果天数超过该月的天数，重置为1，月份加1
+            while (day > getDaysInMonth(month, year)) {
+                day = 1;
+                month++;
+            }
+
+            // 如果月份超过12，重置为1，年份加1
+            if (month > 12) {
+                month = 1;
+                year++;
+            }
+
+            // 更新显示和输入框
+            document.getElementById('time').textContent =
+                `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ` +
+                `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`;
+
+            document.getElementById('year').value = year;
+            document.getElementById('month').value = month;
+            document.getElementById('day').value = day;
+            document.getElementById('hour').value = hour;
+            document.getElementById('minute').value = minute;
+            document.getElementById('second').value = second;
+        }
+        // 获取当前时间，并格式化为所需的格式
+        function getCurrentTime() {
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = now.getMonth() + 1; // getMonth() 返回的月份是从0开始的
+            var day = now.getDate();
+            var hour = now.getHours();
+            var minute = now.getMinutes();
+            var second = now.getSeconds();
+
+            // 确保数值以两位数显示
+            return {
+                year: year,
+                month: month < 10 ? '0' + month : month,
+                day: day < 10 ? '0' + day : day,
+                hour: hour < 10 ? '0' + hour : hour,
+                minute: minute < 10 ? '0' + minute : minute,
+                second: second < 10 ? '0' + second : second
+            };
+        }
+
+        // 使用当前时间初始化输入框和显示
+        function initializeTime() {
+            var currentTime = getCurrentTime();
+            document.getElementById('time').textContent =
+                `${currentTime.year}-${currentTime.month}-${currentTime.day} ` +
+                `${currentTime.hour}:${currentTime.minute}:${currentTime.second}`;
+
+            document.getElementById('year').value = currentTime.year;
+            document.getElementById('month').value = currentTime.month;
+            document.getElementById('day').value = currentTime.day;
+            document.getElementById('hour').value = currentTime.hour;
+            document.getElementById('minute').value = currentTime.minute;
+            document.getElementById('second').value = currentTime.second;
+        }
+
+        // 当文档加载完成时，初始化时间
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeTime();
+        });
+
+        // 初始化时间显示为当前时间
+        updateTime();
+    </script>
+</body>
+
+</html>

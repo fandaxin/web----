@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自定义时钟</title>
+    <style>
+    </style>
+</head>
+
+<body>
+    <!-- 创建一个画布元素，用于绘制时钟 -->
+    <canvas id="clock"></canvas> 
+    <!-- 创建一个日期时间输入框，允许用户选择时间 -->
+    <input type="datetime-local" step="1" id="userTime">
+    <!-- 创建一个按钮，点击时调用setUserTime()函数 -->
+    <button onclick="setUserTime()">设置时间</button>
+    <!-- 创建一个div元素，用于显示当前时间 -->
+    <div id="clock1"></div>
+
+    
+    <script>
+        //定义一个变量userTime，初始值为null
+        let userTime = null;
+        //定义一个名为setUserTime的函数，用于设置用户选择的时间
+        function setUserTime() {
+            const input = document.getElementById('userTime');
+            userTime = new Date(input.value);
+            console.log(userTime);
+            if (userTime) {
+                userTime.setSeconds(userTime.getSeconds() + 1);
+
+                // 如果秒数等于60，则将秒数设置为0，并将分钟数加1
+                if (userTime.getSeconds() === 60) {
+                    userTime.setSeconds(0);
+                    userTime.setMinutes(userTime.getMinutes() + 1);
+                }
+
+                // 如果分钟数等于60，则将分钟数设置为0，并将小时数加1
+                if (userTime.getMinutes() === 60) {
+                    userTime.setMinutes(0);
+                    userTime.setHours(userTime.getHours() + 1);
+                }
+
+                // 如果小时数等于24，则将小时数设置为0，并将日期加1
+                if (userTime.getHours() === 24) {
+                    userTime.setHours(0);
+                    userTime.setDate(userTime.getDate() + 1);
+                }
+
+                // 如果月份等于12且日期等于31，则将年份加31
+                if (userTime.getMonth() === 11 && userTime.getDate() === 31) {
+                    userTime.setFullYear(userTime.getFullYear() + 1);
+                }
+            }
+            let time = userTime.getFullYear() + '/' + (userTime.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                userTime.getDate().toString().padStart(2, '0') + '  ' + userTime.getHours().toString().padStart(2, '0') +
+                ':' + userTime.getMinutes().toString().padStart(2, '0') + ':' + userTime.getSeconds().toString().padStart(2, '0');
+            document.getElementById('clock1').innerText = time;
+        
+        //获取画布元素
+        const canvas = document.getElementById('clock');
+        //获取2D绘图上下文
+        const ctx = canvas.getContext('2d');
+        //计算画布半径
+        let radius = canvas.height / 2;
+
+        //将绘图原点移动到画布中心
+        ctx.translate(radius, radius);
+        //计算表盘半径
+        radius = radius * 0.9;
+
+        //定义一个名为drawClock的函数，用于绘制时钟
+        function drawClock() {
+            drawFace(ctx, radius);
+            drawNumbers(ctx, radius);
+            drawTime(ctx, radius);
+        }
+
+        /**
+         * 绘制表盘
+         * */
+        //定义一个名为drawFace的函数，用于绘制表盘
+        function drawFace(ctx, radius) {
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = radius * 0.1;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 0.1, 0, 2 * Math.PI);
+            ctx.fillStyle = 'black';
+            ctx.fill();
+        }
+
+        /**
+         * 绘制表盘数字
+         * */
+        //定义一个名为drawNumbers的函数，用于绘制表盘数字
+        function drawNumbers(ctx, radius) {
+            let ang;
+            let num;
+            ctx.font = radius * 0.15 + 'px arial';
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            for (num = 1; num < 13; num++) {
+                ang = num * Math.PI / 6;
+                ctx.rotate(ang);
+                ctx.translate(0, -radius * 0.85);
+                ctx.rotate(-ang);
+                ctx.fillText(num.toString(), 0, 0);
+                ctx.rotate(ang);
+                ctx.translate(0, radius * 0.85);
+                ctx.rotate(-ang);
+            }
+        }
+
+        /**
+         * 绘制指针时间
+         */
+        //定义一个名为drawTime的函数，用于绘制指针时间
+        function drawTime(ctx, radius) {
+            let hour = userTime.getHours();
+            let minute = userTime.getMinutes();
+            let second = userTime.getSeconds();
+            hour = hour % 12;
+            hour = (hour * Math.PI / 6) + (minute * Math.PI / (6 * 60)) + (second * Math.PI / (360 * 60));
+            drawHand(ctx, hour, radius * 0.5, radius * 0.07);
+            minute = (minute * Math.PI / 30) + (second * Math.PI / (30 * 60));
+            drawHand(ctx, minute, radius * 0.8, radius * 0.07);
+            second = (second * Math.PI / 30);
+            drawHand(ctx, second, radius * 0.9, radius * 0.02);
+            userTime = new Date(userTime.getTime() + 1000);
+        }
+
+        /**
+         * 绘制表盘表针
+         */
+         //定义一个名为drawHand的函数，用于绘制表盘表针
+        function drawHand(ctx, pos, length, width) {
+            ctx.beginPath();
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            ctx.moveTo(0, 0);
+            ctx.rotate(pos);
+            ctx.lineTo(0, -length);
+            ctx.stroke();
+            ctx.rotate(-pos);
+        }
+        //如果userTime不为空，则执行以下操作
+        if(userTime){
+            //调用drawClock()函数绘制时钟
+            drawClock();
+            //每隔1秒调用drawClock()函数重新绘制时钟
+            setInterval(drawClock, 1000);
+        }
+    }
+        
+    </script>
+</body>
+
+</html>

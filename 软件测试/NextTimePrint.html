@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>时钟</title>
+<style>
+    /* 这里可以添加一些CSS样式 */
+</style>
+</head>
+<body onload="updateTickMarks()">
+    <h2>下一时刻系统</h2>
+
+<label for="dateInput">选择日期：</label>
+<input type="date" id="dateInput">
+<br><br>
+<label for="timeInput">选择时间：</label>
+<input type="time" id="timeInput" step="1">
+<br><br>
+<button onclick="nextSecond()">下一秒</button>
+
+<p id="output"></p>
+
+<svg id="clock" width="200" height="200">
+    <!-- 时钟外圆 -->
+    <circle cx="100" cy="100" r="90" stroke="black" stroke-width="2" fill="none" />
+    
+    <!-- 刻度 -->
+    <g id="tickMarks"></g>
+    
+    <!-- 时针 -->
+    <line id="hourHand" x1="100" y1="100" x2="100" y2="60" stroke="black" stroke-width="4" />
+    <!-- 分针 -->
+    <line id="minuteHand" x1="100" y1="100" x2="100" y2="50" stroke="black" stroke-width="3" />
+    <!-- 秒针 -->
+    <line id="secondHand" x1="100" y1="100" x2="100" y2="40" stroke="red" stroke-width="2" />
+</svg>
+
+<script>
+let currentDate = new Date();
+
+function updateClock() {
+    const dateInput = document.getElementById('dateInput').value;
+    const timeInput = document.getElementById('timeInput').value;
+    
+    // 将日期和时间拼接成标准的日期时间格式
+    const dateTimeString = dateInput + 'T' + timeInput;
+    
+    // 创建一个新的 Date 对象
+    currentDate = new Date(dateTimeString);
+    
+    // 更新时钟
+    updateClockDisplay();
+}
+
+function updateClockDisplay() {
+    // 计算时钟指针的角度
+    const hourDegree = (currentDate.getHours() % 12) * 30 + currentDate.getMinutes() * 0.5;
+    const minuteDegree = currentDate.getMinutes() * 6 + currentDate.getSeconds() * 0.1;
+    const secondDegree = currentDate.getSeconds() * 6;
+    
+    // 应用角度到时钟指针
+    document.getElementById('hourHand').setAttribute('transform', `rotate(${hourDegree}, 100, 100)`);
+    document.getElementById('minuteHand').setAttribute('transform', `rotate(${minuteDegree}, 100, 100)`);
+    document.getElementById('secondHand').setAttribute('transform', `rotate(${secondDegree}, 100, 100)`);
+
+    // 输出时间
+    document.getElementById('output').innerText = currentDate.toLocaleTimeString();
+}
+
+function updateTickMarks() {
+    const tickMarks = document.getElementById('tickMarks');
+    // 清除之前的刻度
+    tickMarks.innerHTML = ""; 
+    
+    // 计算每个刻度的位置和角度
+    for (let i = 1; i <= 12; i++) {
+        const angle = (i - 3) * 30; // 每个刻度相隔30度
+        const x1 = 100 + Math.cos(degreesToRadians(angle)) * 80; // 外圆半径为90，留一些空隙
+        const y1 = 100 + Math.sin(degreesToRadians(angle)) * 80;
+        const x2 = 100 + Math.cos(degreesToRadians(angle)) * 85; // 刻度长度为5
+        const y2 = 100 + Math.sin(degreesToRadians(angle)) * 85;
+        
+        // 创建刻度线段并添加到 SVG 中
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        line.setAttribute("stroke", "black");
+        line.setAttribute("stroke-width", "2");
+        tickMarks.appendChild(line);
+        
+        // 添加刻度数字
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", x2);
+        text.setAttribute("y", y2 + 5); // 留一些空间以使数字不至于过于靠近刻度线
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("font-size", "12");
+        text.textContent = i; // 添加数字
+        tickMarks.appendChild(text);
+    }
+}
+
+function nextSecond() {
+    const dateInput = document.getElementById('dateInput').value;
+    const timeInput = document.getElementById('timeInput').value;
+    const dateTimeString = dateInput + 'T' + timeInput;
+    currentDate = new Date(dateTimeString);
+    currentDate.setSeconds(currentDate.getSeconds() + 1);
+    updateClockDisplay();
+}
+
+function updateClockDisplay() {
+    const hourDegree = (currentDate.getHours() % 12) * 30 + currentDate.getMinutes() * 0.5;
+    const minuteDegree = currentDate.getMinutes() * 6 + currentDate.getSeconds() * 0.1;
+    const secondDegree = currentDate.getSeconds() * 6;
+
+    document.getElementById('hourHand').setAttribute('transform', `rotate(${hourDegree}, 100, 100)`);
+    document.getElementById('minuteHand').setAttribute('transform', `rotate(${minuteDegree}, 100, 100)`);
+    document.getElementById('secondHand').setAttribute('transform', `rotate(${secondDegree}, 100, 100)`);
+
+    // 输出日期和时间
+    document.getElementById('output').innerText = currentDate.toLocaleString();
+}
+
+ 
+
+function degreesToRadians(degrees) {
+    return degrees * Math.PI / 180;
+}
+
+// 初始化时钟显示
+updateClockDisplay();
+</script>
+
+</body>
+</html>
