@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue初探——全局构建版本</title>
+    <script src="https://lib.baomitu.com/vue/latest/vue.global.js"></script>
+</head>
+<body>
+    <div id="app">
+        <p>{{message}}</p>
+    </div>
+    <script>
+        const HelloVueApp={
+            data(){
+                return{
+                    message:"Vue.js渐进增加HTML--全局构建版本实例"
+                }
+            }
+        };
+
+        Vue.createApp(HelloVueApp).mount("#app");
+    </script>
+</body>
+</html>
